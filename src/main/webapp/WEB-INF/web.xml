@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
+
+ <!-- loj4j的配置文件路径 和log4j的监听器-->
+    <context-param>
+        <param-name>log4jConfigLocation</param-name>
+        <param-value>classpath:/log4j.properties</param-value>
+    </context-param>
+    <listener>
+        <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+    </listener>
+    <!-- 设置Spring容器加载配置文件路径 -->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>
+            classpath*:springContext/*.xml
+        </param-value>
+    </context-param> 
+     <!-- spring IOC容器的配置文件位置和IOC容器的监听器 -->
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener> 
+    
+    <!-- spring mvc的核心转发器 和转发的规则 -->
+     <servlet>
+        <servlet-name>spring-mvc</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <!--   默认/WEB-INF/[servlet名字]-servlet.xml加载上下文， 如果配置了contextConfigLocation参数，将使用classpath:spring-servlet.xml加载上下文    -->
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath*:spring-servlet.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>spring-mvc</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+    
+     <!-- 配置session超时时间 -->
+     <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config> 
+    
+  <welcome-file-list>
+    <welcome-file>jsp/index.jsp</welcome-file>
+  </welcome-file-list>
+    </web-app>

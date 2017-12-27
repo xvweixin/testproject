@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans  
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd  
+        http://www.springframework.org/schema/context  
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd  
+        http://www.springframework.org/schema/util 
+        http://www.springframework.org/schema/util/spring-util-3.0.xsd
+        http://www.springframework.org/schema/tx  
+        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.2.xsd  
+        http://www.springframework.org/schema/jdbc  
+        http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd">
+    
+     <!-- 引入属性文件 -->  
+  <context:property-placeholder location="classpath:/app.properties" />
+      
+    <!-- 配置数据源 -->  
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">  
+        <property name="driverClass" value="${jdbc.driverClass}"></property>  
+        <property name="jdbcUrl" value="${jdbc.url}"></property>  
+        <property name="user" value="${jdbc.user}"></property>  
+        <property name="password" value="${jdbc.pass}"></property>
+        <property name="minPoolSize" value="${jdbc.pool.minPoolSize}"></property>
+    	<property name="maxPoolSize" value="${jdbc.pool.maxPoolSize}"></property>
+    	<property name="maxIdleTime" value="${jdbc.pool.maxIdleTime}"></property>
+    	<property name="acquireIncrement" value="${jdbc.pool.acquireIncrement}"></property>
+    	<property name="maxStatements" value="0"></property>
+    	<property name="initialPoolSize" value="${jdbc.pool.initialPoolSize}"></property>
+    	<property name="idleConnectionTestPeriod" value="${jdbc.pool.idleConnectionTestPeriod}"></property>
+    	<property name="acquireRetryAttempts" value="30"></property>
+    	<property name="breakAfterAcquireFailure" value="false"></property>
+    	<property name="testConnectionOnCheckout" value="false"></property>  
+    </bean>  
+      
+    <!-- 配置SessionFactory -->  
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">  
+        <property name="dataSource" ref="dataSource" />
+        <property name="hibernateProperties">  
+            <props>  
+               <!--  <prop key="hibernate.dialect">org.hibernate.dialect.Oracle9Dialect</prop>   -->
+               <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <!-- <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop> -->  
+                <prop key="hibernate.show_sql">true</prop>  
+                <!-- <prop key="hibernate.format_sql">${hibernate.format_sql}</prop> -->  
+            </props>  
+        </property>  
+        <property name="packagesToScan">  
+            <list>
+                <value>com.xwx.entity</value>  
+            </list>  
+        </property>  
+    </bean>  
+      
+    <!-- 配置一个事务管理器 -->  
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">  
+        <property name="sessionFactory" ref="sessionFactory"/>  
+    </bean>  
+    <!-- 基于注释的事务，当注释中发现@Transactional时，使用id为“transactionManager”的事务管理器  -->
+    <!-- 如果没有设置transaction-manager的值，则spring以缺省默认的事务管理器来处理事务，默认事务管理器为第一个加载的事务管理器 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!-- 配置事务，使用代理的方式 -->  
+    <!-- <bean id="transactionProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean" abstract="true">    
+        <property name="transactionManager" ref="transactionManager"></property>    
+        <property name="transactionAttributes">    
+            <props>    
+                <prop key="add*">PROPAGATION_REQUIRED</prop>
+                <prop key="save*">PROPAGATION_REQUIRED</prop>    
+                <prop key="update*">PROPAGATION_REQUIRED</prop>   
+                <prop key="del*">PROPAGATION_REQUIRED</prop>
+                <prop key="find*">PROPAGATION_REQUIRED</prop>    
+                <prop key="*">PROPAGATION_REQUIRED</prop>    
+            </props>    
+        </property>    
+    </bean>    -->
+    
+     <!-- 事务 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="find*" read-only="true" propagation="REQUIRED" />
+            <tx:method name="*" propagation="REQUIRED" />
+        </tx:attributes>
+    </tx:advice>
+   <!-- 配置AOP -->
+    <aop:config proxy-target-class="true">
+        <aop:pointcut expression="execution(* *..service..*Service*.*(..))" id="serviceMethod" />
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
+    </aop:config>
+</beans>
